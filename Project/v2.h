@@ -9,19 +9,22 @@ namespace std {
 	public:
 		Matrix();
 		Matrix(size_t rows, size_t columns);
-        Matrix(const Matrix& other);
+		Matrix(size_t rows, size_t columns,T lower,T up);
+		Matrix(const Matrix& other);
 		~Matrix();
-		int get_rows() const;
-		int get_columns() const;
+		size_t get_rows() const;
+		size_t get_columns() const;
 		T& operator()(T i,T j);
 		Matrix operator+(const Matrix& rhs);
 		Matrix operator-(const Matrix& rhs);
 		Matrix operator*(const Matrix& rhs);
 		Matrix operator*(const T scalar);
 		Matrix operator/(const T scalar);
-		friend Matrix operator*(T scalar,Matrix matrix);
-		friend Matrix operator/(T scalar,Matrix matrix);
+        Matrix operator*(T scalar,Matrix matrix);
+        Matrix operator/(T scalar,Matrix matrix);
 		T tr();
+		//T* random(T lower,T up);
 		friend std::ostream& operator<<(std::ostream& out,const Matrix& matrix);
 	};
+
 }
