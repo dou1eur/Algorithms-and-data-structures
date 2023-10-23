@@ -19,7 +19,7 @@ namespace std {
         _data=new T[_columns*_rows];
         for(size_t i=0;i<_rows;++i){
             for(size_t j=0;j<_columns;++j){
-                _data[i*_columns+j]=1;
+                _data[i*_columns+j]=0;
             }
         }
     }
@@ -47,12 +47,15 @@ namespace std {
             delete[] _data;
         }
     }
-    //get and set
+    //get 
     size_t get_rows() const{
     return _rows;
     }
 	size_t get_columns() const{
     return _columns;
+    }
+    T* get_data() const{
+        return _data;
     }
     T tr(){
         if (_rows!=_columns){
@@ -75,7 +78,7 @@ namespace std {
         }
     }
     }
-    T& operator()(T i,T j){
+    T& operator()(size_t i, size_t j) {
         if(((i>=0)&&(i<_rows))&&((j>=0)&&(j<_columns))){
         return _data[i*_columns+j];
         }
@@ -173,25 +176,44 @@ namespace std {
         return out;
     }
 };
-}
+
 
 //Привести заданную квадратную матрицу A к нижнетреугольному виду.
 template<typename T>
-T* lower_triangular_matrix(std::Matrix<T>& matrix){
-    size_t rows = matrix.get_rows();
-    size_t columns = matrix.get_columns();
-    T* result=new T[columns*rows];
-    for (T i = 0; i < rows; i++) {
-        for (T j = i + 1; j < columns; j++) {
-            T tmp = matrix(j,i) / matrix(i,i);
-            for (size_t k = i; k < columns; k++) {
-                result(i,j)=matrix(i,j)-matrix(k,j)*tmp;
+Matrix<T> LU_decomposition(Matrix<T>& A) {
+    if (A.get_rows() != A.get_columns()) {
+        throw runtime_error("Matrix must be square for LU decomposition.");
+    }
+    size_t n=A.get_rows();
+    Matrix<T> L(n, n);
+    Matrix<T> U(n, n);
+
+    for (size_t i = 0; i < n; i++) {
+        // Compute upper triangular matrix
+        for (size_t k = i; k < n; k++) {
+            T sum = 0;
+            for (size_t j = 0; j < i; j++) {
+                sum= sum+L(i, j) * U(j, k);
+            }
+            U(i, k) = A(i, k) - sum;
+        }
+        // Compute lower triangular matrix
+        for (size_t k = i; k < n; k++) {
+            if (i == k) {
+                L(i, i) = 1;
+            } 
+            else {
+                T sum = 0;
+                for (size_t j = 0; j < i; j++) {
+                    sum=sum+ L(k, j) * U(j, i);
+                }
+                L(k, i) = (A(k, i) - sum) / U(i, i);
             }
         }
     }
-    return result;
-  }
-
+    return L;
+}
+}
 
 
 
