@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include<complex>
 namespace std {
-	template<typename T>
+	template<class T>
 	class Matrix {
 	private:
 		T* _data;
@@ -23,16 +23,14 @@ namespace std {
                 }
             }
         }
-
-        Matrix(size_t rows,size_t columns,const complex<T> data):_rows(rows),_columns(columns) {
+        Matrix(size_t rows,size_t columns, complex<T>){
             if(rows<0||columns<0) {
                 throw runtime_error("Uncorrect size of matrix!");
             }
             _data=new complex<T>[_columns*_rows];
-            for(size_t i=0;i<_rows;++i){
+            for(size_t i=0;i<_rows;++i) {
                 for(size_t j=0;j<_columns;++j) {
-                    _data[i*_columns+j]->real(data[i*_columns+j].real());
-                    _data[i*_columns+j]->imag(data[i*_columns+j].imag());
+                    _data[i*_columns+j]=0;
                 }
             }
         }
@@ -44,8 +42,21 @@ namespace std {
             _data=new T[_columns*_rows];
             for(size_t i=0;i<_rows;++i) {
                 for(size_t j=0;j<_columns;++j) {
-                    auto a=rand()%up+lower;
-                    _data[i*_columns+j]=a;
+                    _data[i*_columns+j]=lower+static_cast<T>(rand())/(static_cast<T>(RAND_MAX)/(up-lower));
+                }
+            }
+        }
+
+        Matrix(size_t rows, size_t columns,complex<T> lower,complex<T> up):_rows(rows),_columns(columns) {
+            if(rows<0||columns<0) {
+                throw runtime_error("Uncorrect size of matrix!");
+            }
+            _data=new T[_columns*_rows];
+            for(size_t i=0;i<_rows;++i) {
+                for(size_t j=0;j<_columns;++j) {
+                    T real=lower.real()+static_cast<T>(rand())/(static_cast<T>(RAND_MAX)/(up.real()-lower.real()));
+                    T imag=lower.imag()+static_cast<T>(rand())/(static_cast<T>(RAND_MAX)/(up.imag()-lower.imag()));
+                    _data[i*_columns+j]=complex<T>(real,imag);
                 }
             }
         }
@@ -59,19 +70,12 @@ namespace std {
             }
         }
 
-        Matrix(const Matrix<complex<T>>& other) {
-            _rows = other.get_rows();
-            _columns = other.get_columns();
-            _data = new complex<T>[_rows * _columns];
-            for (int i = 0; i < (_columns*_rows); ++i) {
-                _data[i] ->real(other._data[i].real());
-                _data[i] ->imag(other._data[i].imag());
-            }
-        }
 
         ~Matrix() {
             if(_data!=nullptr) {
                 delete[] _data;
+                _data=nullptr;
+                _rows=_columns=0;
             }
         }
 
@@ -192,12 +196,11 @@ namespace std {
             }
             return result;
         }
-
-        Matrix<complex<T>> multiplication(const T scalar) {
-            Matrix<T> result(_rows,_columns);
+        Matrix<complex<T>> operator*(const complex<T> scalar) {
+            Matrix<complex<T>> result(_rows,_columns);
             for(size_t i=0;i<(_columns*_rows);++i) {
-                result._data[i].real()=_data[i].real()*scalar;
-                result._data[i].imag()=_data[i].imag()*scalar;
+                result._data[i].real()=_data[i].real()*scalar.real();
+                result._data[i].imag()=_data[i].imag()*scalar.imag();
             }
             return result;
         }
@@ -211,26 +214,27 @@ namespace std {
                 result._data[i]=_data[i]/scalar;
             }
             return result;
-        }
-
-        Matrix<complex<T>> division(const T scalar) {
-            if (scalar==0) {
+        }        
+        Matrix<complex<T>> operator/(const complex<T> scalar) {
+            if (scalar.real()==0) {
                 throw invalid_argument("/0");
             }
-            Matrix<T> result(_rows,_columns);
+            Matrix<complex<T>> result(_rows,_columns);
             for(size_t i=0;i<(_columns*_rows);++i) {
-                result._data[i].real()=_data[i].real()/scalar;
-                result._data[i].imag()=_data[i].imag()/scalar;
+                result._data[i].real()=_data[i].real()/scalar.real();
+                result._data[i].imag()=_data[i].imag()/scalar.imag();
             }
             return result;
         }
 
+
         bool operator==(const Matrix<T>& other) {
+            const double eps=0.0001;
             bool result=true;
             if ((_rows==other._rows) && (_columns==other._columns)) {
                 for (int i = 0; i < _rows; ++i){
                     for (int j = 0; j < _columns; ++j) {
-                        if (abs(_data[i*_columns+_rows] - other._data[i*_columns+_rows]) != 0) {
+                        if (abs(_data[i*_columns+_rows] - other._data[i*_columns+_rows]) != eps) {
                             result = false;
                         }
                     }
@@ -243,11 +247,12 @@ namespace std {
         }
 
         bool operator==(const Matrix<complex<T>>& other) {
+            const T eps=0.0005;
             bool result=true;
             if ((_rows==other._rows) && (_columns==other._columns)) {
                 for (int i = 0; i < _rows; ++i) {
                     for (int j = 0; j < _columns; ++j) {
-                        if (abs(_data[i*_columns+_rows].real() - other._data[i*_columns+_rows].real()) != 0 &&abs(_data[i*_columns+_rows].imag() - other._data[i*_columns+_rows].imag()) != 0) {
+                        if (abs(_data[i*_columns+_rows].real() - other._data[i*_columns+_rows].real()) != eps &&abs(_data[i*_columns+_rows].imag() - other._data[i*_columns+_rows].imag()) != eps) {
                             result = false;
                         }
                     }
@@ -278,20 +283,10 @@ namespace std {
         }
 
     //Вывод
-        friend std::ostream& operator<<(std::ostream& out,const Matrix<T>& matrix) {
+       friend ostream& operator<<(std::ostream& out,const Matrix<T>& matrix) {
             for (size_t i = 0; i < matrix._rows; ++i) {
                 for (size_t j = 0; j < matrix._columns; ++j) {
                     out << matrix._data[i * matrix._columns + j] << " ";
-                }
-                out << endl;
-            }
-            return out;
-        }
-        
-        ostream& print(std::ostream& out,const Matrix<complex<T>>& matrix) {
-            for (size_t i = 0; i < matrix.get_rows(); ++i) {
-                for (size_t j = 0; j < matrix.get_columns(); ++j) {
-                    out <<"("<< matrix._data[i * matrix.get_columns() + j].real() << "+"<<matrix._data[i * matrix.get_columns() + j].imag()<<i<<")"<<endl;
                 }
                 out << endl;
             }
@@ -333,6 +328,39 @@ Matrix<T> LU_decomposition(Matrix<T>& A) {
     }
     return L;
 }
+template<typename T>
+Matrix<complex<T>> LU_decomposition(Matrix<complex<T>>& A) {
+    //Суть метода- разложить матрицу на верхнюю треугольную и нижнюю треугольную
+    if (A.get_rows() != A.get_columns()) {
+        throw runtime_error("Matrix must be square for LU decomposition.");
+    }
+    size_t n=A.get_rows();
+    Matrix<complex<T>> L(n, n);
+    Matrix<complex<T>> U(n, n);
+    for (size_t i = 0; i < n; ++i) {
+        for (size_t k = i; k < n; ++k) {
+            complex<T> sum = 0;
+            for (size_t j = 0; j < i; ++j) {
+                sum= sum+L(i, j) * U(j, k);
+            }
+            U(i, k) = A(i, k) - sum;
+        }
+        for (size_t k = i; k < n; ++k) {
+            if (i == k) {
+                L(i, i) = 1;
+            } 
+            else {
+                complex<T> sum = 0;
+                for (size_t j = 0; j < i; ++j) {
+                    sum=sum+ L(k, j) * U(j, i);
+                }
+                L(k, i) = (A(k, i) - sum) / U(i, i);
+            }
+        }
+    }
+    return L;
+}
+
 }
 
 
