@@ -2,6 +2,7 @@
 #include <random>
 #include <stdexcept>
 #include<complex>
+#include <ctime>
 namespace std {
 	template<class T>
 	class Matrix {
@@ -40,6 +41,7 @@ namespace std {
                 throw runtime_error("Uncorrect size of matrix!");
             }
             _data=new T[_columns*_rows];
+            srand((time(nullptr)));
             for(size_t i=0;i<_rows;++i) {
                 for(size_t j=0;j<_columns;++j) {
                     _data[i*_columns+j]=lower+static_cast<T>(rand())/(static_cast<T>(RAND_MAX)/(up-lower));
@@ -52,6 +54,7 @@ namespace std {
                 throw runtime_error("Uncorrect size of matrix!");
             }
             _data=new T[_columns*_rows];
+            srand((time(nullptr)));
             for(size_t i=0;i<_rows;++i) {
                 for(size_t j=0;j<_columns;++j) {
                     T real=lower.real()+static_cast<T>(rand())/(static_cast<T>(RAND_MAX)/(up.real()-lower.real()));
@@ -244,7 +247,7 @@ namespace std {
             if ((_rows==other._rows) && (_columns==other._columns)) {
                 for (int i = 0; i < _rows; ++i){
                     for (int j = 0; j < _columns; ++j) {
-                        if (abs(_data[i*_columns+_rows] - other._data[i*_columns+_rows]) != eps) {
+                        if (abs(_data[i*_columns+_rows] - other._data[i*_columns+_rows]) > eps) {
                             result = false;
                         }
                     }
@@ -262,7 +265,7 @@ namespace std {
             if ((_rows==other._rows) && (_columns==other._columns)) {
                 for (int i = 0; i < _rows; ++i) {
                     for (int j = 0; j < _columns; ++j) {
-                        if (abs(_data[i*_columns+_rows].real() - other._data[i*_columns+_rows].real()) != eps &&abs(_data[i*_columns+_rows].imag() - other._data[i*_columns+_rows].imag()) != eps) {
+                        if (abs(_data[i*_columns+_rows].real() - other._data[i*_columns+_rows].real()) > eps &&abs(_data[i*_columns+_rows].imag() - other._data[i*_columns+_rows].imag()) > eps) {
                             result = false;
                         }
                     }
@@ -336,6 +339,7 @@ Matrix<T> LU_decomposition(Matrix<T>& A) {
             }
         }
     }
+    cout<<L*U;
     return L;
 }
 template<typename T>
